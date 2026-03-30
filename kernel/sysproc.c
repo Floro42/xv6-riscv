@@ -8,7 +8,6 @@
 #include "vm.h"
 
 uint64
-
 sys_memsize(void)
 {
  struct proc *p = myproc();
@@ -30,7 +29,7 @@ for (va = 0; va < p->sz; va += PGSIZE) {
   return (uint64)pages * PGSIZE;
 }
 
-
+uint64
 sys_exit(void)
 {
   int n;
