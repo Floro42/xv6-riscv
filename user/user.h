@@ -49,4 +49,4 @@ void* malloc(uint);
 void free(void*);
 
 //Task4A
-void syscall(void);
+uint64 sys_memsize(void);
