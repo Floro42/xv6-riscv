@@ -8,6 +8,29 @@
 #include "vm.h"
 
 uint64
+
+sys_memsize(void)
+{
+ struct proc *p = myproc();
+ uint64 va;
+ int pages = 0;
+
+ // Loop from va = 0 up to p->sz in steps of PGSIZE.
+for (va = 0; va < p->sz; va += PGSIZE) {
+  // - Retrieve pte_t *pte using walk(p->pagetable, va, 0).
+  pte_t *pte = walk(p->pagetable, va, 0);
+  // - Check if it is valid (PTE_V) using: if (pte && (*pte & PTE_V) && (*pte & PTE_U))
+    if (pte && (*pte & PTE_V) && (*pte & PTE_U)) {
+      // Count all valid user pages.
+      pages++;
+    }
+  }
+
+  // Return pages * PGSIZE.
+  return (uint64)pages * PGSIZE;
+}
+
+
 sys_exit(void)
 {
   int n;
