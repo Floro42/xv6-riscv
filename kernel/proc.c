@@ -249,10 +249,13 @@ growproc(int n)
 
   if (newsz >= MAXVA)
     return -1;
-    sz = newsz;
- } else if (n < 0) {
- // Shrinking: still free any pages that are already mapped.
- sz = uvmdealloc(p->pagetable, sz, sz + n);
+
+  sz = newsz;
+
+ } 
+ else if (n < 0) {
+  // Shrinking: still free any pages that are already mapped.
+  sz = uvmdealloc(p->pagetable, sz, sz + n);
  }
 
  p->sz = sz;
