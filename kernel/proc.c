@@ -236,22 +236,27 @@ userinit(void)
 int
 growproc(int n)
 {
-  uint64 sz;
-  struct proc *p = myproc();
+ uint sz;
+ struct proc *p = myproc();
 
-  sz = p->sz;
-  if(n > 0){
-    if(sz + n > TRAPFRAME) {
-      return -1;
-    }
-    if((sz = uvmalloc(p->pagetable, sz, sz + n, PTE_W)) == 0) {
-      return -1;
-    }
-  } else if(n < 0){
-    sz = uvmdealloc(p->pagetable, sz, sz + n);
-  }
-  p->sz = sz;
-  return 0;
+ sz = p->sz;
+
+ if (n > 0) {
+  // TODO- Lazy Allocation:
+  // Do NOT call uvmalloc() to allocate physical memory here.
+  // Just increase the size of the process address space (uint newsz).
+  uint newsz = sz + n;
+
+  if (newsz >= MAXVA)
+    return -1;
+    sz = newsz;
+ } else if (n < 0) {
+ // Shrinking: still free any pages that are already mapped.
+ sz = uvmdealloc(p->pagetable, sz, sz + n);
+ }
+
+ p->sz = sz;
+ return 0;
 }
 
 // Create a new process, copying the parent.
