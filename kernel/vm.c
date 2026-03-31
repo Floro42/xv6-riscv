@@ -450,27 +450,37 @@ copyinstr(pagetable_t pagetable, char *dst, uint64 srcva, uint64 max)
 // returns 0 if va is invalid or already mapped, or if
 // out of physical memory, and physical address if successful.
 uint64
-vmfault(pagetable_t pagetable, uint64 va, int read)
+vmfault(pagetable_t pagetable, uint64 va, int is_read)
 {
-  uint64 mem;
-  struct proc *p = myproc();
+ uint64 a;
+ pte_t *pte;
+ char *mem;
+ // Round faulting address down to page boundary.
+ a = PGROUNDDOWN(va);
+ // TODO: Basic sanity check: don't handle crazy high addresses. Return 0 if it exceeds or equals MAXVA.
+ if (a >= MAXVA)
+  return 0;
 
-  if (va >= p->sz)
-    return 0;
-  va = PGROUNDDOWN(va);
-  if(ismapped(pagetable, va)) {
-    return 0;
-  }
-  mem = (uint64) kalloc();
-  if(mem == 0)
-    return 0;
-  memset((void *) mem, 0, PGSIZE);
-  if (mappages(p->pagetable, va, PGSIZE, mem, PTE_W|PTE_U|PTE_R) != 0) {
-    kfree((void *)mem);
-    return 0;
-  }
-  return mem;
+ // If it's already mapped, nothing to do.
+ pte = walk(pagetable, a, 0);
+ if (pte && (*pte & PTE_V)) {
+  return 1;
+ }
+
+ // TODO: Allocate a physical page in mem variable. If no mem allocated, return 0 to indicate out of memory.
+ mem = kalloc();
+ if (mem == 0)
+  return 0;
+
+ memset(mem, 0, PGSIZE);
+ // Map it: user, readable, writable. (Exec bit not needed for heap.)
+ if (mappages(pagetable, a, PGSIZE, (uint64)mem, PTE_U | PTE_R | PTE_W) != 0) {
+  kfree(mem);
+  return 0;
+ }
+  return 1; // success
 }
+
 
 int
 ismapped(pagetable_t pagetable, uint64 va)
